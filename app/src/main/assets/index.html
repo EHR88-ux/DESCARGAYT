@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Descarga YT</title>
+<style>
+  :root{--fondo:#1e1f26;--tarjeta:#2a2c36;--texto:#eef0f6;--suave:#9aa3bd;--acento:#e8912d;--error:#ff6b6b}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--fondo);color:var(--texto);font-family:system-ui,-apple-system,Roboto,sans-serif;padding:20px 16px 32px}
+  main{max-width:520px;margin:0 auto}
+  h1{font-size:24px;margin:8px 0 4px}
+  .sub{color:var(--suave);margin:0 0 20px;font-size:14px}
+  .tarjeta{background:var(--tarjeta);border-radius:16px;padding:16px}
+  label{display:block;font-size:13px;color:var(--suave);margin:0 0 6px}
+  input,select{width:100%;padding:14px;border-radius:12px;border:1px solid #3b3e4c;background:#1e1f26;color:var(--texto);font-size:16px}
+  .fila{display:flex;gap:8px;margin-bottom:14px}
+  .fila input{flex:1}
+  button{border:0;border-radius:12px;padding:14px 16px;font-size:16px;font-weight:600;cursor:pointer}
+  #pegar{background:#3b3e4c;color:var(--texto)}
+  #ir{width:100%;margin-top:16px;background:var(--acento);color:#1e1f26}
+  #ir:disabled{opacity:.5}
+  .barra{height:10px;background:#1e1f26;border-radius:6px;overflow:hidden;margin-top:16px}
+  #pct{height:100%;width:0;background:var(--acento);transition:width .3s}
+  #registro{margin-top:14px;font-size:12px;color:var(--suave);max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,monospace}
+  #registro .e{color:var(--error)}
+  .creditos{text-align:center;margin:28px 0 0;font-size:13px;color:var(--suave)}
+  .creditos b{color:var(--acento)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Descarga YT</h1>
+  <p class="sub">Pega un enlace y se guarda en Descargas/DescargaYT.</p>
+  <div class="tarjeta">
+    <label for="url">Enlace</label>
+    <div class="fila">
+      <input id="url" type="url" inputmode="url" placeholder="https://youtube.com/…" autocomplete="off">
+      <button id="pegar" type="button">Pegar</button>
+    </div>
+    <label for="calidad">Calidad</label>
+    <select id="calidad">
+      <option value="max">Máxima calidad (vídeo)</option>
+      <option value="1080">Vídeo 1080p</option>
+      <option value="720">Vídeo 720p</option>
+      <option value="480">Vídeo 480p</option>
+      <option value="mp3">Solo audio MP3</option>
+      <option value="m4a">Solo audio M4A</option>
+    </select>
+    <button id="ir" type="button">Descargar</button>
+    <div class="barra"><div id="pct"></div></div>
+    <div id="registro"></div>
+  </div>
+  <p class="creditos">App creada por <b>Enrique Heredia</b></p>
+</main>
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var ocupado = false;
+
+function ytLog(t, e) {
+  var d = document.createElement("div");
+  if (e) d.className = "e";
+  d.textContent = t;
+  $("registro").appendChild(d);
+  $("registro").scrollTop = $("registro").scrollHeight;
+}
+function ytProgreso(p) { $("pct").style.width = p + "%"; }
+function ytFin(nombre) {
+  ocupado = false; $("ir").disabled = false;
+  ytLog("Listo. Guardado en Descargas/DescargaYT: " + nombre);
+}
+function ytError(m) {
+  ocupado = false; $("ir").disabled = false;
+  ytLog("Error: " + m, true);
+}
+function ytEntrada(url) { $("url").value = url; descargar(); }
+
+function descargar() {
+  if (ocupado) return;
+  var m = $("url").value.match(/https?:\/\/\S+/);
+  if (!m) { ytLog("Pega primero un enlace válido.", true); return; }
+  if (typeof Android === "undefined") { ytLog("Esta página solo funciona dentro de la app.", true); return; }
+  try { localStorage.setItem("yt_calidad", $("calidad").value); } catch (x) {}
+  ocupado = true; $("ir").disabled = true; ytProgreso(0);
+  $("url").value = m[0];
+  ytLog("Enlace: " + m[0]);
+  Android.iniciar(m[0], $("calidad").value);
+}
+
+$("ir").addEventListener("click", descargar);
+$("pegar").addEventListener("click", function () {
+  if (typeof Android === "undefined") return;
+  var t = Android.portapapeles() || "";
+  var m = t.match(/https?:\/\/\S+/);
+  $("url").value = m ? m[0] : t.trim();
+});
+try { var c = localStorage.getItem("yt_calidad"); if (c) $("calidad").value = c; } catch (x) {}
+</script>
+</body>
+</html>
